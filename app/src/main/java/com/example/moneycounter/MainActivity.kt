@@ -144,13 +144,14 @@ class MainActivity : ComponentActivity() {
         val parentJob = CoroutineScope(Dispatchers.IO).launch {
             for(i in 1..100){
                 if(isActive){// condition to check
+                    delay(5)
                     executeLongRunningTask()
                     Log.d("val-i", "execute2: ${i.toString()}")
                 }
             }
         }
 
-        delay(100)
+        delay(500)
         Log.d("val-i", "execute2: Cancelling Job")
         parentJob.cancel()//the thread still executes the longrunning task although we canceled the coroutine , so to avoid this we put a check condition
         parentJob.join()
@@ -169,27 +170,35 @@ class MainActivity : ComponentActivity() {
 
             Log.d("pc", "execute: Parent Started")
 
+            var follow = getInstaFollowers() // coroutine waits for a function call
+
+            Log.d("pc", "execute: $follow")
+
             val childJob = launch(Dispatchers.IO) {
                 try{
                     Log.d("pc", "child: $coroutineContext")
 
                     Log.d("pc", "execute: child Started")
-                    delay(5000)
+                    delay(8000)
                     Log.d("pc", "execute: child ended")
 
                 }catch (e: CancellationException){
                     Log.d("pc", "execute: Child job cancelled")
                 }
             }// by default child coroutine will inherit parent coroutine context, but we can also explicitly define, like done here i.e. Dispatchers.IO
+            //coroutine dosen't  wait for a child coroutine instead it launches the coroutine and proceeds ahead
 
             delay(3000)
             childJob.cancel()
             Log.d("pc", "execute: Parent Ended")
         }
+        // same here coroutine will be lauched and excetuion moves ahead ...if it finds cancel it will cancel the coroutine or
+        // if it finds join it will wait for the coroutine
 
 //        delay(1000)
 //        parentJob.cancel()
         parentJob.join() // this will keep our coroutine suspended unless the parentjob execution is completed
+        // join() will block the thread/coroutine on which join() is called until the associated coroutine completes its execution.
         Log.d("pc", "execute: Parent Completed")
     }
 
@@ -251,12 +260,12 @@ class MainActivity : ComponentActivity() {
 
 
     private suspend fun getFbFollowers(): Int{
-        delay(50000)
+        delay(5000)
         return 54
     }
 
     private suspend fun getInstaFollowers(): Int{
-        delay(2000)
+        delay(8000)
         return 117
     }
 }
@@ -368,7 +377,7 @@ fun CreateCircle(moneyCounter: Int = 0, updateMoneyCounter: (Int) -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun GreetingPreview() {
     MoneyCounterTheme {
